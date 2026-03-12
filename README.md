@@ -1,36 +1,61 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Ecoyaan Checkout Flow
 
-## Getting Started
+A simplified checkout flow built for the Ecoyaan frontend engineering assignment.
 
-First, run the development server:
+## Tech Stack
+- **Framework**: Next.js 16 (App Router)
+- **Styling**: Tailwind CSS v4 (Ecoyaan brand colors)
+- **State**: React Context API
+- **Language**: TypeScript
+- **Data**: Mock via SSR in Root Layout
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## Architecture
+Strict module boundaries — every file is ≤ 100 LOC.
+
+```
+src/
+├── app/
+│   ├── layout.tsx          # Root SSR layout with CheckoutProvider
+│   ├── ClientLayout.tsx    # Client boundary injecting SSR data into Context  
+│   ├── page.tsx            # Cart screen (/)
+│   ├── CartPageClient.tsx  # Cart UI client component
+│   ├── checkout/page.tsx   # Address form (/checkout)
+│   ├── payment/page.tsx    # Order review (/payment)
+│   ├── success/page.tsx    # Success (/success)
+│   └── api/cart/route.ts   # Mock REST API
+├── components/
+│   ├── Button.tsx          # Reusable CTA button
+│   ├── Input.tsx           # Reusable form input with error state
+│   ├── CartItem.tsx        # Cart row with quantity controls
+│   ├── PriceSummary.tsx    # Sticky sidebar with totals
+│   ├── AddressForm.tsx     # Shipping form + inline validation
+│   └── OrderReview.tsx     # Payment review card
+├── context/
+│   └── CheckoutContext.tsx # Global cart + address state
+└── types/
+    └── index.ts            # Shared TypeScript types
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## SSR Data Fetching
+Cart data is fetched in the root `layout.tsx` as an `async` Server Component and passed to the `ClientLayout` which hydrates the React Context. All child routes (`/checkout`, `/payment`) share the same context instance.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Form Validation
+Handled in `AddressForm.tsx` with plain React state:
+- Required fields checked before submission
+- Email: regex `/^\S+@\S+\.\S+$/`
+- Phone: digits only, exactly 10 chars `/^\d{10}$/`
+- PIN Code: digits only, exactly 6 chars `/^\d{6}$/`
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Running Locally
 
-## Learn More
+```bash
+npm install
+npm run dev
+# Visit http://localhost:3000
+```
 
-To learn more about Next.js, take a look at the following resources:
+## Flow
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```
+/ (Cart)  →  /checkout (Address)  →  /payment (Review)  →  /success
+```
