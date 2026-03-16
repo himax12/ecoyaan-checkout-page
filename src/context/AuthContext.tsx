@@ -18,8 +18,8 @@ type AuthContextValue = {
 
 const MOCK_USER: MockUser = {
   id: 'mock-user-001',
-  name: 'Priya Sharma',
-  email: 'priya.sharma@ecoyaan.com',
+  name: 'Himanshu Gupta',
+  email: 'himanshu.gupta@ecoyaan.com',
   avatarInitials: 'PS',
 };
 
