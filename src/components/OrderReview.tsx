@@ -8,10 +8,12 @@ import { useRazorpay } from '@/hooks/useRazorpay';
 import Image from 'next/image';
 
 export function OrderReview() {
-  const { cartItems, shippingAddress, shipping_fee, discount_applied } = useCheckout();
+  const { cartItems, addresses, selectedAddressId, shipping_fee, discount_applied } = useCheckout();
   const router = useRouter();
   const { initiatePayment } = useRazorpay();
   const [isProcessing, setIsProcessing] = useState(false);
+
+  const shippingAddress = addresses.find(a => a.id === selectedAddressId);
 
   const subtotal = cartItems.reduce((acc, i) => acc + i.product_price * i.quantity, 0);
   const grandTotal = subtotal + shipping_fee - discount_applied;
@@ -64,8 +66,9 @@ export function OrderReview() {
         <div className="bg-white rounded-lg border border-gray-100 shadow-sm p-6">
           <h2 className="text-lg font-bold text-gray-900 mb-4">Delivery to</h2>
           <p className="text-gray-800 font-medium">{shippingAddress.fullName}</p>
-          <p className="text-gray-600 text-sm">{shippingAddress.email} · {shippingAddress.phoneNumber}</p>
-          <p className="text-gray-600 text-sm mt-1">{shippingAddress.city}, {shippingAddress.state} — {shippingAddress.pinCode}</p>
+          <p className="text-gray-600 text-sm mt-1">{shippingAddress.streetAddress}</p>
+          <p className="text-gray-600 text-sm mt-0.5">{shippingAddress.city}, {shippingAddress.state} — {shippingAddress.pinCode}</p>
+          <p className="text-gray-600 text-sm mt-1 font-medium">{shippingAddress.email} · {shippingAddress.phoneNumber}</p>
         </div>
       )}
 
@@ -74,10 +77,6 @@ export function OrderReview() {
           <p>No address found. <button className="text-[#10b981] underline" onClick={() => router.push('/checkout')}>Go back</button></p>
         </div>
       )}
-
-      <Button fullWidth onClick={handlePayment} disabled={!shippingAddress || isProcessing}>
-        {isProcessing ? 'Processing Payment...' : `🔒 Pay Securely — ₹${grandTotal}`}
-      </Button>
     </div>
   );
 }

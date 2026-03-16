@@ -6,6 +6,17 @@ export type CartItem = {
   image: string;
 };
 
+export type Address = {
+  id: string;
+  fullName: string;
+  email: string;
+  phoneNumber: string;
+  streetAddress: string;
+  pinCode: string;
+  city: string;
+  state: string;
+};
+
 export type CheckoutContextType = {
   cartItems: CartItem[];
   shipping_fee: number;

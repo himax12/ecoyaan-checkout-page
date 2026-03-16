@@ -4,6 +4,7 @@ import { CartItem } from '@/components/CartItem';
 import { PriceSummary } from '@/components/PriceSummary';
 import { useCheckout } from '@/context/CheckoutContext';
 import { useRouter } from 'next/navigation';
+import { Button } from '@/components/Button';
 
 export default function CartPageClient() {
   const { cartItems } = useCheckout();
@@ -30,10 +31,17 @@ export default function CartPageClient() {
         </div>
 
         <div className="w-full lg:w-96">
-          <PriceSummary 
-            onProceed={() => router.push('/checkout')} 
-            ctaText="Proceed to Checkout" 
-          />
+          <PriceSummary />
+          <div className="mt-8">
+            <Button 
+              fullWidth 
+              onClick={() => router.push('/checkout')} 
+              disabled={cartItems.length === 0}
+              className={cartItems.length === 0 ? 'opacity-50 cursor-not-allowed' : ''}
+            >
+              Proceed to Checkout
+            </Button>
+          </div>
         </div>
       </div>
     </div>

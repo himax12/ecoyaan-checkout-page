@@ -1,20 +1,15 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { CartItem, CheckoutContextType } from '@/types';
-
-type ShippingAddress = {
-  fullName: string;
-  email: string;
-  phoneNumber: string;
-  pinCode: string;
-  city: string;
-  state: string;
-};
+import { CartItem, CheckoutContextType, Address } from '@/types';
 
 type ContextValue = CheckoutContextType & {
-  shippingAddress: ShippingAddress | null;
-  setShippingAddress: (address: ShippingAddress) => void;
+  addresses: Address[];
+  selectedAddressId: string | null;
+  addAddress: (address: Omit<Address, 'id'>) => void;
+  updateAddress: (id: string, address: Omit<Address, 'id'>) => void;
+  deleteAddress: (id: string) => void;
+  setSelectedAddress: (id: string | null) => void;
   updateQuantity: (id: number, newQuantity: number) => void;
   removeItem: (id: number) => void;
 };
@@ -29,20 +24,30 @@ export function CheckoutProvider({
   initialData: CheckoutContextType;
 }) {
   const [cartItems, setCartItems] = useState<CartItem[]>(initialData.cartItems);
-  const [shippingAddress, setShippingAddress] = useState<ShippingAddress | null>(null);
+  const [addresses, setAddresses] = useState<Address[]>([]);
+  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
 
   // Load from localStorage on mount
   useEffect(() => {
     try {
       const savedCart = localStorage.getItem('ecoyaan_cart');
-      const savedAddress = localStorage.getItem('ecoyaan_address');
+      const savedAddresses = localStorage.getItem('ecoyaan_addresses');
+      const savedSelectedId = localStorage.getItem('ecoyaan_selected_address_id');
       
       if (savedCart) {
         setCartItems(JSON.parse(savedCart));
       }
-      if (savedAddress) {
-        setShippingAddress(JSON.parse(savedAddress));
+      if (savedAddresses) {
+        const parsedAddresses = JSON.parse(savedAddresses);
+        setAddresses(parsedAddresses);
+        // Pre-select the first inserted array if not selected
+        if (!savedSelectedId && parsedAddresses.length > 0) {
+            setSelectedAddressId(parsedAddresses[0].id);
+        }
+      }
+      if (savedSelectedId) {
+        setSelectedAddressId(savedSelectedId);
       }
     } catch (e) {
       console.warn("Could not load from localStorage", e);
@@ -60,13 +65,36 @@ export function CheckoutProvider({
 
   useEffect(() => {
     if (isInitialized) {
-      if (shippingAddress) {
-        localStorage.setItem('ecoyaan_address', JSON.stringify(shippingAddress));
+      localStorage.setItem('ecoyaan_addresses', JSON.stringify(addresses));
+      if (selectedAddressId) {
+        localStorage.setItem('ecoyaan_selected_address_id', selectedAddressId);
       } else {
-        localStorage.removeItem('ecoyaan_address');
+        localStorage.removeItem('ecoyaan_selected_address_id');
       }
     }
-  }, [shippingAddress, isInitialized]);
+  }, [addresses, selectedAddressId, isInitialized]);
+
+  const addAddress = (address: Omit<Address, 'id'>) => {
+    const newId = Date.now().toString();
+    const newAddress = { ...address, id: newId };
+    setAddresses((prev) => [...prev, newAddress]);
+    setSelectedAddressId(newId);
+  };
+
+  const updateAddress = (id: string, updatedFields: Omit<Address, 'id'>) => {
+    setAddresses((prev) => prev.map((addr) => (addr.id === id ? { ...updatedFields, id } : addr)));
+  };
+
+  const deleteAddress = (id: string) => {
+    setAddresses((prev) => prev.filter((addr) => addr.id !== id));
+    if (selectedAddressId === id) {
+      setSelectedAddressId(null);
+    }
+  };
+
+  const setSelectedAddress = (id: string | null) => {
+    setSelectedAddressId(id);
+  };
 
   const updateQuantity = (id: number, quantity: number) => {
     setCartItems((prev) =>
@@ -82,8 +110,12 @@ export function CheckoutProvider({
     cartItems,
     shipping_fee: initialData.shipping_fee,
     discount_applied: initialData.discount_applied,
-    shippingAddress,
-    setShippingAddress,
+    addresses,
+    selectedAddressId,
+    addAddress,
+    updateAddress,
+    deleteAddress,
+    setSelectedAddress,
     updateQuantity,
     removeItem,
   };

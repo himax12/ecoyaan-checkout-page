@@ -1,7 +1,6 @@
 import { useCheckout } from '@/context/CheckoutContext';
-import { Button } from './Button';
 
-export function PriceSummary({ onProceed, ctaText = 'Proceed to Checkout' }: { onProceed: () => void, ctaText?: string }) {
+export function PriceSummary() {
   const { cartItems, shipping_fee, discount_applied } = useCheckout();
 
   const subtotal = cartItems.reduce((acc, item) => acc + (item.product_price * item.quantity), 0);
@@ -40,17 +39,6 @@ export function PriceSummary({ onProceed, ctaText = 'Proceed to Checkout' }: { o
           <span>Grand Total:</span>
           <span>₹{grandTotal}</span>
         </div>
-      </div>
-
-      <div className="mt-8">
-        <Button 
-          fullWidth 
-          onClick={onProceed} 
-          disabled={isCartEmpty}
-          className={isCartEmpty ? 'opacity-50 cursor-not-allowed' : ''}
-        >
-          {ctaText}
-        </Button>
       </div>
     </div>
   );

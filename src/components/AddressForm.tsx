@@ -1,20 +1,23 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { useCheckout } from '@/context/CheckoutContext';
 import { usePinLookup } from '@/hooks/usePinLookup';
 import { validateEmail, validatePhoneNumber, validatePinCode, validateRequired } from '@/utils/validation';
 import { Input } from './Input';
 import { Button } from './Button';
 
-export function AddressForm() {
-  const { shippingAddress, setShippingAddress } = useCheckout();
-  const router = useRouter();
+type AddressFormProps = {
+  onSuccess?: () => void;
+  onCancel?: () => void;
+};
+
+export function AddressForm({ onSuccess, onCancel }: AddressFormProps) {
+  const { addAddress } = useCheckout();
   const { lookupPin, pinLoading, pinError } = usePinLookup();
 
-  const [formData, setFormData] = useState(shippingAddress || {
-    fullName: '', email: '', phoneNumber: '', pinCode: '', city: '', state: ''
+  const [formData, setFormData] = useState({
+    fullName: '', email: '', phoneNumber: '', streetAddress: '', pinCode: '', city: '', state: ''
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -23,6 +26,7 @@ export function AddressForm() {
     if (!validateRequired(formData.fullName)) newErrors.fullName = 'Name is required';
     if (!validateEmail(formData.email)) newErrors.email = 'Valid email is required';
     if (!validatePhoneNumber(formData.phoneNumber)) newErrors.phoneNumber = 'Must be 10 digits';
+    if (!validateRequired(formData.streetAddress)) newErrors.streetAddress = 'Address is required';
     if (!validatePinCode(formData.pinCode)) newErrors.pinCode = 'Must be 6 digits';
     if (!validateRequired(formData.city)) newErrors.city = 'City is required';
     if (!validateRequired(formData.state)) newErrors.state = 'State is required';
@@ -32,7 +36,10 @@ export function AddressForm() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (validate()) { setShippingAddress(formData); router.push('/payment'); }
+    if (validate()) { 
+      addAddress(formData);
+      if (onSuccess) onSuccess();
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -61,6 +68,9 @@ export function AddressForm() {
         <Input label="Full Name" name="fullName" value={formData.fullName} onChange={handleChange} error={errors.fullName} required />
         <Input label="Email Address" name="email" type="email" value={formData.email} onChange={handleChange} error={errors.email} required />
         <Input label="Phone Number" name="phoneNumber" type="tel" value={formData.phoneNumber} onChange={handleChange} error={errors.phoneNumber} required />
+        <div className="md:col-span-2">
+          <Input label="Street Address" name="streetAddress" value={formData.streetAddress} onChange={handleChange} error={errors.streetAddress} required />
+        </div>
         <div>
           <Input label="PIN Code" name="pinCode" value={formData.pinCode} onChange={handlePinChange} error={errors.pinCode || pinError} required />
           {pinLoading && <p className="text-xs text-[#10b981] -mt-2 mb-2">🔍 Looking up location...</p>}
@@ -70,8 +80,11 @@ export function AddressForm() {
         <Input label="State" name="state" value={formData.state} onChange={handleChange} error={errors.state} required
           readOnly={pinLoading} className={formData.state && !errors.state ? 'bg-green-50 text-green-800' : ''} />
       </div>
-      <div className="mt-8">
-        <Button type="submit" fullWidth disabled={pinLoading}>Deliver to this address</Button>
+      <div className="mt-8 flex gap-4">
+        {onCancel && (
+          <Button type="button" variant="secondary" onClick={onCancel} disabled={pinLoading} className="flex-1">Cancel</Button>
+        )}
+        <Button type="submit" disabled={pinLoading} className={onCancel ? "flex-1" : "w-full"}>Save Address</Button>
       </div>
     </form>
   );
