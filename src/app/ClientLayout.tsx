@@ -1,6 +1,9 @@
+'use client';
+
 import React from 'react';
 import { CheckoutContextType } from '@/types';
 import { CheckoutProvider } from '@/context/CheckoutContext';
+import { AuthProvider } from '@/context/AuthContext';
 
 export default function ClientLayout({
   children,
@@ -10,8 +13,10 @@ export default function ClientLayout({
   initialData: CheckoutContextType;
 }) {
   return (
-    <CheckoutProvider initialData={initialData}>
-      {children}
-    </CheckoutProvider>
+    <AuthProvider>
+      <CheckoutProvider initialData={initialData}>
+        {children}
+      </CheckoutProvider>
+    </AuthProvider>
   );
 }

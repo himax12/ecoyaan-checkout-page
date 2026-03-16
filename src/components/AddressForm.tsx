@@ -6,20 +6,31 @@ import { usePinLookup } from '@/hooks/usePinLookup';
 import { validateEmail, validatePhoneNumber, validatePinCode, validateRequired } from '@/utils/validation';
 import { Input } from './Input';
 import { Button } from './Button';
+import { Address } from '@/types';
 
 type AddressFormProps = {
   onSuccess?: () => void;
   onCancel?: () => void;
+  /** If provided, the form operates in edit mode for the given address */
+  editAddress?: Address;
 };
 
-export function AddressForm({ onSuccess, onCancel }: AddressFormProps) {
-  const { addAddress } = useCheckout();
+export function AddressForm({ onSuccess, onCancel, editAddress }: AddressFormProps) {
+  const { addAddress, updateAddress, addresses } = useCheckout();
   const { lookupPin, pinLoading, pinError } = usePinLookup();
+  const isEditMode = !!editAddress;
 
   const [formData, setFormData] = useState({
-    fullName: '', email: '', phoneNumber: '', streetAddress: '', pinCode: '', city: '', state: ''
+    fullName:      editAddress?.fullName      ?? '',
+    email:         editAddress?.email         ?? '',
+    phoneNumber:   editAddress?.phoneNumber   ?? '',
+    streetAddress: editAddress?.streetAddress ?? '',
+    pinCode:       editAddress?.pinCode       ?? '',
+    city:          editAddress?.city          ?? '',
+    state:         editAddress?.state         ?? '',
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const validate = () => {
     const newErrors: Record<string, string> = {};
@@ -36,16 +47,30 @@ export function AddressForm({ onSuccess, onCancel }: AddressFormProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (validate()) { 
+    setSubmitError(null);
+    if (!validate()) return;
+
+    if (isEditMode) {
+      updateAddress(editAddress!.id, formData);
+    } else {
+      const isDuplicate = addresses.some((addr) =>
+        addr.streetAddress.toLowerCase().trim() === formData.streetAddress.toLowerCase().trim() &&
+        addr.pinCode === formData.pinCode
+      );
+      if (isDuplicate) {
+        setSubmitError('This address is already saved.');
+        return;
+      }
       addAddress(formData);
-      if (onSuccess) onSuccess();
     }
+    if (onSuccess) onSuccess();
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
     if (errors[name]) setErrors((prev) => ({ ...prev, [name]: '' }));
+    if (submitError) setSubmitError(null);
   };
 
   const handlePinChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -63,7 +88,14 @@ export function AddressForm({ onSuccess, onCancel }: AddressFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg border border-gray-100 shadow-sm max-w-2xl mx-auto">
-      <h2 className="text-xl font-bold text-gray-900 mb-6">Delivery Address</h2>
+      <h2 className="text-xl font-bold text-gray-900 mb-6">
+        {isEditMode ? 'Edit Address' : 'New Delivery Address'}
+      </h2>
+      {submitError && (
+        <div className="mb-4 p-3 bg-red-50 text-red-700 text-sm rounded-md border border-red-200">
+          {submitError}
+        </div>
+      )}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Input label="Full Name" name="fullName" value={formData.fullName} onChange={handleChange} error={errors.fullName} required />
         <Input label="Email Address" name="email" type="email" value={formData.email} onChange={handleChange} error={errors.email} required />
@@ -84,7 +116,9 @@ export function AddressForm({ onSuccess, onCancel }: AddressFormProps) {
         {onCancel && (
           <Button type="button" variant="secondary" onClick={onCancel} disabled={pinLoading} className="flex-1">Cancel</Button>
         )}
-        <Button type="submit" disabled={pinLoading} className={onCancel ? "flex-1" : "w-full"}>Save Address</Button>
+        <Button type="submit" disabled={pinLoading} className={onCancel ? "flex-1" : "w-full"}>
+          {isEditMode ? 'Update Address' : 'Save Address'}
+        </Button>
       </div>
     </form>
   );

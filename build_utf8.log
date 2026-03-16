@@ -1,0 +1,31 @@
+
+> ecoyaan-checkout@0.1.0 build
+> next build
+
+⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+ We detected multiple lockfiles and selected the directory of C:\Users\ghima\pnpm-lock.yaml as the root directory.
+ To silence this warning, set `turbopack.root` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack#root-directory for more information.
+ Detected additional lockfiles: 
+   * C:\Users\ghima\OneDrive\Documents\Desktop\]work\OPENSOURCE\frontend ui\ecoyaan-checkout\package-lock.json
+
+▲ Next.js 16.1.6 (Turbopack)
+- Environments: .env.local
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 3.8s
+  Running TypeScript ...
+Failed to compile.
+
+./src/app/CartPageClient.tsx:34:13
+Type error: Type '{ onProceed: () => void; ctaText: string; }' is not assignable to type 'IntrinsicAttributes'.
+  Property 'onProceed' does not exist on type 'IntrinsicAttributes'.
+
+[0m [90m 32 |[39m         [33m<[39m[33mdiv[39m className[33m=[39m[32m"w-full lg:w-96"[39m[33m>[39m
+ [90m 33 |[39m           [33m<[39m[33mPriceSummary[39m 
+[31m[1m>[22m[39m[90m 34 |[39m             onProceed[33m=[39m{() [33m=>[39m router[33m.[39mpush([32m'/checkout'[39m)} 
+ [90m    |[39m             [31m[1m^[22m[39m
+ [90m 35 |[39m             ctaText[33m=[39m[32m"Proceed to Checkout"[39m 
+ [90m 36 |[39m           [33m/[39m[33m>[39m
+ [90m 37 |[39m         [33m<[39m[33m/[39m[33mdiv[39m[33m>[39m[0m
+Next.js build worker exited with code: 1 and signal: null

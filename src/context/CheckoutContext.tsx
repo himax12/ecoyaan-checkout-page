@@ -3,6 +3,29 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { CartItem, CheckoutContextType, Address } from '@/types';
 
+const MOCK_ADDRESSES: Address[] = [
+  {
+    id: 'mock-addr-001',
+    fullName: 'Priya Sharma',
+    email: 'priya.sharma@ecoyaan.com',
+    phoneNumber: '9876543210',
+    streetAddress: '42, Green Valley Apartments, MG Road',
+    pinCode: '560001',
+    city: 'Bengaluru',
+    state: 'Karnataka',
+  },
+  {
+    id: 'mock-addr-002',
+    fullName: 'Priya Sharma',
+    email: 'priya.sharma@ecoyaan.com',
+    phoneNumber: '9876543210',
+    streetAddress: '7, Sunrise Tower, Andheri West',
+    pinCode: '400053',
+    city: 'Mumbai',
+    state: 'Maharashtra',
+  },
+];
+
 type ContextValue = CheckoutContextType & {
   addresses: Address[];
   selectedAddressId: string | null;
@@ -38,16 +61,18 @@ export function CheckoutProvider({
       if (savedCart) {
         setCartItems(JSON.parse(savedCart));
       }
-      if (savedAddresses) {
-        const parsedAddresses = JSON.parse(savedAddresses);
-        setAddresses(parsedAddresses);
-        // Pre-select the first inserted array if not selected
-        if (!savedSelectedId && parsedAddresses.length > 0) {
-            setSelectedAddressId(parsedAddresses[0].id);
-        }
-      }
+
+      // If no saved addresses yet, seed with mock data for the demo
+      const addrToLoad: Address[] = savedAddresses
+        ? JSON.parse(savedAddresses)
+        : MOCK_ADDRESSES;
+
+      setAddresses(addrToLoad);
+
       if (savedSelectedId) {
         setSelectedAddressId(savedSelectedId);
+      } else if (addrToLoad.length > 0) {
+        setSelectedAddressId(addrToLoad[0].id);
       }
     } catch (e) {
       console.warn("Could not load from localStorage", e);
